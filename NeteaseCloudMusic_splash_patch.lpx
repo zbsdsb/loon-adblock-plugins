@@ -1,0 +1,23 @@
+#!name=网易云开屏广告拦截补丁(xeapi)
+#!desc=补充拦截网易云 9.5.x 新版开屏广告接口 xeapi/ad/*（原插件只覆盖 eapi/api，不匹配 xeapi 前缀，导致开屏广告照常下发）。适用网易云音乐 9.5.x（2026-08-10 验证）
+#!author=zbsdsb
+#!system=ios
+#!loon_version=3.2.0
+#!homepage=https://github.com/zbsdsb/loon-adblock-plugins
+#!date=2026-08-10
+
+[Rule]
+# 素材域名（开屏图片/视频/广告平台），与主插件重复也无妨
+DOMAIN, iadmusicmat.music.126.net, REJECT
+DOMAIN, iadmusicmatvideo.music.126.net, REJECT
+DOMAIN, iadmat.nosdn.127.net, REJECT
+DOMAIN, iadmatapk.nosdn.127.net, REJECT
+DOMAIN, iad.g.163.com, REJECT
+
+[Rewrite]
+# 关键：x?e?api 同时覆盖 /api/ad、/eapi/ad、/xeapi/ad 全部广告接口（含 loading/bidget 开屏数据、ad/get、config/get、prefetch、monitor）
+# reject-dict = 直接返回 {}，客户端解密失败即跳过广告（需 MITM 生效）
+https?:\/\/(ipv4|interface\d?)\.music\.163\.com\/x?e?api\/ad reject-dict
+
+[MITM]
+hostname = ipv4.music.163.com, interface.music.163.com, interface1.music.163.com, interface3.music.163.com, interface9.music.163.com
