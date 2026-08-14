@@ -73,3 +73,4 @@ Loon 插件的四段式结构（.lpx 纯文本）：
 
 - 京东去广告 v2（2026-08-12）：协议迁移（functionId→base64 body、响应→base64、start→startup）+ kelee.one 源站被 Cloudflare 拉黑，双重失效 → 特征识别 + 双协议兼容重写，27 用例 + 57 响应回归全过
 - 网易云开屏补丁（2026-08-10）：9.5.x 新增 `xeapi` 前缀广告接口，旧插件只匹配 `eapi/api` → 正则改 `x?e?api` 覆盖全系
+- 网易云去广告 v2（2026-08-14）：9.5.67 开屏 `/x?e?api/ad` 仍被拦截，但广告迁到 AES+gzip 加密的 `link/page/rcmd/resource/show`（`PAGE_RECOMMEND_BANNER_1`）、`sp/flow/popup/query`（启动免流弹窗）、`delivery/batch-deliver`（会员投放卡）。密钥不是公开 eapi 的 `e82ckenh8gbtaden`，而是社区脚本同款 `e82ckenh8dichen8`。整段广告接口用 reject-dict，混排接口解密后按 `BANNER` / 坑位码清洗
