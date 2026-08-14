@@ -7,8 +7,7 @@
 | 插件 | 功能 | 适用版本 | 验证日期 | Loon 要求 |
 |---|---|---|---|---|
 | [京东去广告 v2](JD_remove_ads_v2.lpx) | 移除开屏广告、首页/我的/订单/物流页推广楼层、弹窗、搜索热词 | 京东 App **≥ 15.9.50**（兼容旧版协议） | 2026-08-12 | 3.2.4+ |
-| [网易云开屏广告拦截补丁](NeteaseCloudMusic_splash_patch.lpx) | 拦截开屏广告（xeapi/eapi/api/ad 全系 + 素材域名） | 网易云音乐 **9.5.x** | 2026-08-10 | 3.2.0+ |
-| [网易云去广告 v2](NeteaseCloudMusic_ads_v2.lpx) | 开屏 + 首页推荐 Banner + 二楼入口 + 运营商免流弹窗 + 会员投放卡 | 网易云音乐 **9.5.67**（兼容 9.5.x） | 2026-08-14 | 3.2.4+ |
+| [网易云去广告](NeteaseCloudMusic_splash_patch.lpx) | 开屏 + 首页推荐 Banner + 二楼入口 + 运营商免流弹窗 + 会员投放卡（**稳定文件名，刷新即升级**） | 网易云音乐 **9.5.67**（兼容 9.5.x） | 2026-08-14 | 3.2.4+ |
 
 ## 导入方式
 
@@ -16,7 +15,7 @@ Loon → 配置 → 插件 → 右上角 `+` → 粘贴 URL：
 
 ```text
 https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/JD_remove_ads_v2.lpx
-https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudMusic_ads_v2.lpx
+https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudMusic_splash_patch.lpx
 ```
 
 或直接点击上面表格里的插件文件名，在 GitHub 页面查看源码后手动复制内容创建插件。
@@ -24,8 +23,8 @@ https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudM
 ## 使用注意
 
 1. **MITM 证书**：需信任 Loon 的 MITM 证书并开启 HTTPS 解密（两个插件都自带 `[MitM]` hostname，导入时按提示允许）
-2. **停用旧插件**：京东插件会替换旧版 kelee `JD_remove_ads.lpx`。网易云请用 v2 替换旧的开屏补丁，不要两个同时开
-3. **生效验证**：导入后**完全杀掉 App 再重启**（后台切换不够），确认开屏和首页 Banner 消失
+2. **停用旧插件**：京东插件会替换旧版 kelee `JD_remove_ads.lpx`。网易云继续用原来的 `NeteaseCloudMusic_splash_patch.lpx` 链接，刷新即可拿到最新规则，不要再另装一份
+3. **生效验证**：刷新插件后**完全杀掉 App 再重启**（后台切换不够），确认开屏和首页 Banner 消失
 4. **失效排查**：如果 App 更新后广告回潮，按 [Loon 插件失效排查流程](docs/loon-plugin-troubleshooting.md) 抓 HAR 排查
 
 ## 为什么京东插件要叫 v2
@@ -50,8 +49,8 @@ https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudM
 ```text
 ├── JD_remove_ads_v2.lpx              # 京东去广告插件（引用下方脚本）
 ├── JD_remove_ads_v2.js               # 京东清洗脚本（base64/明文双协议兼容）
-├── NeteaseCloudMusic_splash_patch.lpx # 网易云开屏广告补丁（已被 v2 覆盖，保留兼容）
-├── NeteaseCloudMusic_ads_v2.lpx      # 网易云去广告 v2（开屏 + 首页 Banner + 弹窗）
+├── NeteaseCloudMusic_splash_patch.lpx # 网易云去广告稳定入口（文件名不变）
+├── NeteaseCloudMusic_ads_v2.lpx      # 同上内容的别名，勿当第二份插件启用
 ├── NeteaseCloudMusic_ads_v2.js       # 网易云清洗脚本（AES+gzip 解密后按特征清洗）
 ├── tests/
 │   ├── jd-test.js                    # 京东脚本单元测试（node 直接运行）

@@ -1,5 +1,5 @@
 #!name=网易云去广告 v2
-#!desc=拦截网易云 9.5.x 开屏广告，并清洗首页推荐 Banner、二楼入口、运营商免流弹窗、会员投放卡。适用网易云音乐 9.5.67（2026-08-14 验证）
+#!desc=稳定导入地址请用 NeteaseCloudMusic_splash_patch.lpx（文件名不变，刷新即升级）。本文件是同内容别名。
 #!author=zbsdsb
 #!system=ios
 #!loon_version=3.2.4
@@ -7,7 +7,6 @@
 #!date=2026-08-14
 
 [Rule]
-# 开屏素材 / 广告监测
 DOMAIN, iadmusicmat.music.126.net, REJECT
 DOMAIN, iadmusicmatvideo.music.126.net, REJECT
 DOMAIN, iadmat.nosdn.127.net, REJECT
@@ -17,15 +16,11 @@ DOMAIN, iad.service.163.org, REJECT
 DOMAIN, bdlog.tanx.com, REJECT
 
 [Rewrite]
-# 开屏 / 广告配置仍走 /x?e?api/ad，reject-dict 后客户端解密失败即跳过
 https?:\/\/(ipv4|interface\d?)\.music\.163\.com\/x?e?api\/ad reject-dict
-# 运营商免流弹窗（启动弹窗「免流量领VIP」）
 https?:\/\/(ipv4|interface\d?)\.music\.163\.com\/x?e?api\/sp\/flow\/popup reject-dict
-# 会员投放卡（账号页 SVIP、播放列表开通条）；整段都是付费引导
 https?:\/\/(ipv4|interface\d?)\.music\.163\.com\/x?e?api\/delivery\/(batch-deliver|deliver) reject-dict
 
 [Script]
-# 首页推荐 Banner 和坑位广告混在加密响应里，必须解密后按特征清洗
 http-response ^https?:\/\/(ipv4|interface\d?)\.music\.163\.com\/x?e?api\/link\/(page\/rcmd\/resource\/show|position\/show\/resource) script-path=https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudMusic_ads_v2.js, requires-body=true, binary-body-mode=true, timeout=20, tag=NeteaseCloudMusic_ads_v2
 
 [MITM]
