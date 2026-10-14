@@ -1,0 +1,9 @@
+private/
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.env
+*.har
+*.p12
+*_key.pem

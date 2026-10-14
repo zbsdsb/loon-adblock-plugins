@@ -1,0 +1,17 @@
+执行 SE2 / Loon 每日维护，当前目录就是 zbsdsb/loon-adblock-plugins。不要扩大范围，不要更新 iOS 或 App，不要执行购买、支付、账号操作，不要保存锁屏密码。
+
+首先检查 maintenance/device-policy.json 与 private/FRIDA_DISABLED.json；Frida 当前因真实设备重启事故已停用。禁止删除隔离记录、解除安全策略、再次启动或注入 Frida。没有用户新的明确授权和独立兼容性验收，不执行真机观察路线、不创建/启用每日任务。
+
+首先运行 python -m maintenance.daily preflight，将输出中的 run_dir/本地证据保留；手机离线、锁屏、Loon 没运行、Telegram 未配置、上轮存在 cleanup_required 时停止真机部分并运行 notify 发送阻塞通知。电脑恢复运行时检查 private/runs 最新记录的北京时间日期，摘要中补报漏跑日期，不伪造补测。
+
+前置检查通过后，运行 python -m maintenance.daily capture。只在 private/ 中保存所有 HAR、截图、原始请求、版本及日志。每款顺序固定网易云、京东、淘宝，各三次冷启动，前15秒逐帧查看；核对帧连续性、开屏广告、进入主页、有无崩溃/持续白屏。禁止点击跳过来伪装 Loon 去广告。
+
+采集后的 capture-summary.json 本身不代表成功。阅读实际图片与 Loon 脚本执行记录，在同一 run_dir 下写 review.json：apps 对象每款包含三条，directory 和 manifest_sha256 必须引用对应采集；记录 review_complete、early_window_covered、home_loaded、crashed、persistent_blank、ad_visible、rule_hit。没有实际版本加载证据不能声称 loaded_version_verified。运行 python -m maintenance.daily review --run-dir RUN_DIR --review REVIEW_PATH，再运行 notify。
+
+两次以上复现才尝试修复；最多两个候选，每轮总预算30分钟。先区分配置/证书/未加载与实际规则失配。只修改广告规则，非广告响应保持原样。必须从实际 Loon 运行记录证明候选加载版本，不能把改缓存、脚本下载成功、退出0当作生效。候选部署前备份当前配置和缓存，退出时恢复并核对哈希。无法确认配置/版本或恢复失败立即停止，留证、通知，不发布。
+
+每次修改在 private/transactions/ 中保留 MODIFIED_FILE、DIFF_FILE.patch、VERIFICATION.txt、ROLLBACK.sh；以同样输入执行原版/候选/回滚，并验证回滚哈希。跑 node tests/jd-test.js、node tests/netease-test.js、python -m unittest discover -s maintenance/tests -v；增加本次脱敏 HAR 回归，合成样本不能冒充 HAR。三款真机回归全部通过，构建 evidence.json，运行 release-check。发布只能通过维护文档规定的候选分支/CI/合并流程；门槛不满足不改main。
+
+仅公开代码、脱敏样本与摘要；绝不提交 private、截图、HAR、订阅URL、代理凭据、证书私钥、Telegram TOKEN。淘宝来源未确认许可前保留外部引用，不复制第三方代码。稳定网易云入口不改文件名；正式更新由用户收到 Telegram 通知后手动完成。
+
+每天发送简短汇总，有阻塞/失效/发布另通知；未送达明确写入通知记录。最终报告区分已验证有效、广告复现、未观察到广告投放、无法完成测试。没有完成动作不得描述为完成。

@@ -1,7 +1,8 @@
 // 测试 harness v2：用 new Function 包装，每次独立作用域
 const fs = require('fs');
+const path = require('path');
 
-let script = fs.readFileSync('/tmp/jd-remove-ads-v2/JD_remove_ads_v2.js', 'utf8');
+let script = fs.readFileSync(path.resolve(__dirname, '..', 'JD_remove_ads_v2.js'), 'utf8');
 // 脚本里有 'use strict' 吗？没有。new Function 体内 $request/$response/$done 是参数
 function run(url, body) {
   let result = null;
@@ -23,13 +24,18 @@ function check(name, cond, detail) {
   else { fail++; console.log('  ❌', name, '—', detail || ''); }
 }
 
-console.log('== 用例 1: HAR 真实 basicConfig (800KB base64，应原样放行) ==');
-const bc = fs.readFileSync('/tmp/basicConfig.json', 'utf8').trim();
+// 私有 HAR 不随仓库分发；默认使用明确标注的合成非广告样本，不能冒充真机抓包。
+function fixture(envName, fallback) {
+  const file = process.env[envName];
+  return file ? fs.readFileSync(file, 'utf8').trim() : fallback;
+}
+console.log('== 用例 1: basicConfig 非广告响应 (可通过 JD_BASIC_CONFIG_FIXTURE 提供私有样本) ==');
+const bc = fixture('JD_BASIC_CONFIG_FIXTURE', b64(JSON.stringify({ code: 0, data: { configuration: 'x'.repeat(800000), deviceLevel: 'L1' } })));
 const r1 = run(BASE, bc);
 check('basicConfig 未改写', r1.body === undefined || r1.body === bc, 'body: ' + (r1.__error ? r1.__error : 'len=' + String((r1.body || '').length)));
 
-console.log('\n== 用例 2: HAR 真实 startup (解码后仅 deviceLevel，应原样放行) ==');
-const startup = fs.readFileSync('/tmp/resp_42.json', 'utf8');
+console.log('\n== 用例 2: startup 非广告响应 (可通过 JD_STARTUP_FIXTURE 提供私有样本) ==');
+const startup = fixture('JD_STARTUP_FIXTURE', JSON.stringify({ code: 0, data: { deviceLevel: 'L1' } }));
 const r2 = run(BASE, b64(startup));
 check('startup 未改写', r2.body === undefined || r2.body === b64(startup), r2.__error || String((r2.body || '')).slice(0, 100));
 
