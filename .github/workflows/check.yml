@@ -1,0 +1,27 @@
+name: Plugin and maintenance regression
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: maintenance/native-capture/go.mod
+          cache-dependency-path: maintenance/native-capture/go.sum
+      - run: node tests/jd-test.js
+      - run: node tests/netease-test.js
+      - run: python -m unittest discover -s maintenance/tests -v
+      - run: go test ./...
+        working-directory: maintenance/native-capture

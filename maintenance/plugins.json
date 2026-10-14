@@ -1,0 +1,21 @@
+{
+  "netease": {
+    "bundle_id": "com.netease.cloudmusic",
+    "plugin": "NeteaseCloudMusic_splash_patch.lpx",
+    "url": "https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudMusic_splash_patch.lpx",
+    "script": "NeteaseCloudMusic_ads_v2.js"
+  },
+  "jd": {
+    "bundle_id": "com.360buy.jdmobile",
+    "plugin": "JD_remove_ads_v2.lpx",
+    "url": "https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/JD_remove_ads_v2.lpx",
+    "script": "JD_remove_ads_v2.js"
+  },
+  "taobao": {
+    "bundle_id": "com.taobao.taobao4iphone",
+    "url": "https://raw.githubusercontent.com/ifflagged/Darwin/main/Modules/Loon/Kelee/Taobao_remove_ads.lpx",
+    "distribution": "external_reference_only",
+    "author": "RuCu6",
+    "license_status": "not_confirmed_do_not_vendor"
+  }
+}

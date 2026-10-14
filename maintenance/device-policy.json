@@ -1,0 +1,6 @@
+{
+  "target": "zbs-se2",
+  "frida_enabled": false,
+  "compatibility_verified": false,
+  "reason": "2026-10-14: initproc exited panics occurred during Frida service/enumeration attempts; no automatic retry or schedule activation."
+}

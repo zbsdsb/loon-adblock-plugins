@@ -61,6 +61,7 @@ https://raw.githubusercontent.com/zbsdsb/loon-adblock-plugins/main/NeteaseCloudM
 
 ## 更新
 
+- SE2 每日真机测试、Telegram 通知与发布门控见 [每日维护说明](docs/daily-maintenance.md)。工具下载/单测通过不代表真机广告效果，验收前不启用定时任务。
 - 修改脚本后跑 `node tests/jd-test.js` 和 `node tests/netease-test.js` 回归，通过后提交推送
 - Loon 端插件脚本缓存：可在 Loon 插件详情里刷新脚本（或重启 Loon）
 - 欢迎提 Issue / PR
