@@ -68,6 +68,11 @@ def verify_capture(directory):
     directory = Path(directory)
     data = json.loads((directory / "capture.json").read_text(encoding="utf-8"))
     frames = data.get("frames", [])
+    native = data.get("backend") == "native-instruments"
+    if native and (data.get("source") != "physical_device" or data.get("errors") or
+                   data.get("helper_exit_status") != 0 or data.get("helper_finished") is not True or
+                   data.get("own_helper_closed") is not True or data.get("probe_only") is not False):
+        raise ValueError("native_capture_incomplete")
     if len(frames) < 30:
         raise ValueError("insufficient_frames")
     for frame in frames:
@@ -76,7 +81,12 @@ def verify_capture(directory):
             raise ValueError("unsafe_frame_path")
         if sha256(directory / name) != frame["sha256"]:
             raise ValueError("frame_hash_mismatch")
-        if frame.get("applicationState") != 0:
+        if native:
+            if not (directory / name).read_bytes().startswith(b"\xff\xd8"):
+                raise ValueError("native_frame_not_jpeg")
+            if "applicationState" in frame:
+                raise ValueError("native_foreground_state_must_not_be_fabricated")
+        elif frame.get("applicationState") != 0:
             raise ValueError("application_not_foreground")
     # 启动时刻与画面间空窗超一秒，或者帧间空窗超一秒，不能证明没有短暂开屏广告。
     started = data.get("resumed", data["started"])
@@ -86,4 +96,31 @@ def verify_capture(directory):
         raise ValueError("capture_too_short")
     if any(b["timestamp"] - a["timestamp"] > 1 for a, b in zip(frames, frames[1:])):
         raise ValueError("frame_gap")
+    if any(b["timestamp"] <= a["timestamp"] for a, b in zip(frames, frames[1:])):
+        raise ValueError("frame_time_not_monotonic")
+    if native:
+        # 完整保留系统启动过渡画面，不给原生截图伪填 UIKit 的 applicationState。
+        # 另存的逐帧看图记录必须与本轮 manifest 和每张图片逐一绑定。
+        if frames[-1]["timestamp"] - data.get("launch_completed", float("inf")) < 14:
+            raise ValueError("native_post_launch_window_too_short")
+        review_file = directory / "native-ui-review.json"
+        if not review_file.is_file():
+            raise ValueError("native_ui_review_required")
+        review = json.loads(review_file.read_text(encoding="utf-8"))
+        if review.get("source") != "visual_screen_review" or review.get("manifest_sha256") != sha256(directory / "capture.json"):
+            raise ValueError("native_ui_review_not_bound")
+        annotations = review.get("frames", [])
+        if len(annotations) != len(frames):
+            raise ValueError("native_ui_review_incomplete")
+        target_seen = False
+        for frame, annotation in zip(frames, annotations):
+            if annotation.get("file") != frame["file"] or annotation.get("sha256") != frame["sha256"]:
+                raise ValueError("native_ui_review_frame_mismatch")
+            state = annotation.get("state")
+            if state == "target_app":
+                target_seen = True
+            elif state != "launch_transition" or target_seen or frame["timestamp"] - started > 2:
+                raise ValueError("native_target_not_foreground")
+        if not target_seen:
+            raise ValueError("native_target_not_foreground")
     return data

@@ -162,13 +162,19 @@ def finalize(destination, review):
         for raw in captured.get("apps", {}).get(app, []):
             entry = dict(raw)
             matching = next((r for r in review.get("apps", {}).get(app, []) if r.get("directory") == raw["directory"]), {})
-            if raw.get("capture_verified"):
+            folder = destination / raw["directory"]
+            native_manifest = folder / "capture.json"
+            native = (native_manifest.is_file() and
+                      json.loads(native_manifest.read_text(encoding="utf-8")).get("backend") == "native-instruments")
+            if raw.get("capture_verified") or (native and matching):
                 folder = destination / raw["directory"]
                 evidence = verify_capture(folder)
                 digest = sha256(folder / "capture.json")
                 if digest != matching.get("manifest_sha256"):
                     raise ValueError("review_not_bound_to_capture")
                 entry.update(matching)
+                # 审核记录不能覆盖底层采集验证；原生路径必须先完成逐帧前台证明。
+                entry["capture_verified"] = True
                 # 单靠标签或审核声明不证明版本；还需要本地保存的运行版本证据。
                 runtime = folder / "runtime-version.json"
                 entry["loaded_version_verified"] = False

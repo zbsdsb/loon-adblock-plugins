@@ -22,9 +22,27 @@ python -m maintenance.loon_audit
 ```
 
 `loon_audit` 只读配置、偏好与脚本记录，不启动 App 或 Frida。偏好中选中的文件、隧道进程、插件 enabled 标记分别报告，不能证明实时脚本版本或证书信任。
-Windows 当前未发现可用的原生 iPhone 截图 CLI；替代采集链路尚未验收，不能进行或声称三款真机开屏回归。
+2026-10-15 已验证 Windows + go-ios v1.3.2 原生截图，以及 iPhoneMirror runtime-v0.2.1 的 iUsbBridge USB 触控，无须 WDA 签名。已看图确认时钟点击效果、三款 App 主界面和授权的网易云/淘宝协议确认；没有登录账号或授予额外跟踪/通知权限。这不是三次开屏广告验收。
 
-下面的采集入口保留供后续适配，**当前被事故策略阻止，不可用于自动测试**：
+### 原生采集入口（保持 Frida 隔离）
+
+```powershell
+python -m maintenance.build_native
+python -m maintenance.native_capture probe --run-dir private/runs/UNIQUE_PROBE
+python -m maintenance.native_capture capture --run-dir private/runs/UNIQUE_CAPTURE
+```
+
+构建只使用已安装 Go 和项目私有模块缓存；`private/native-device.json` 绑定唯一 USB SE2、工具哈希与 helper 源码哈希，不提交。源码变化必须重建；不改驱动、不注册全局 MCP、不读取锁屏密码。隧道仅使用本机回环 API，截图 helper 不开放 HTTP 监听。**不使用 go-ios 的 `screenshot --stream`：该版本上游实现监听 `0.0.0.0`。**
+
+原生持久通道曾测得约4帧/秒、最大间隔约0.27秒，但当时采集的是全黑画面；它只证明传输节奏，不证明有效截图或开屏效果。当前 helper 拒绝全黑/无效截图；真机全黑探针返回失败，未启动目标 App。不能仅凭黑屏判断是锁屏、熄屏还是服务异常。
+
+每次冷启动前，采集进程先写 `APP/N/preflight.jpg` / `preflight.json` 并输出 `awaiting_unlock_visual_review`。**由执行任务的 Agent 亲自查看该图**；确认已解锁且画面有效后，在同目录写 `unlock-review.json`：`source=visual_screen_review`、`unlocked=true`、`preflight_sha256` 等于本轮图像哈希。证明45秒过期；缺失、锁屏、哈希不符时不杀进程、不启动 App。不要让用户代看广告，不根据旧截图批量批准。若阻塞，通知用户把专用测试机解锁并保持屏幕常亮，不绕锁。
+
+通过前置看图后才确认目标进程已终止，开始连续截图并异步 `uiopen`，每款三次，顺序网易云→京东→淘宝。每次20秒原始窗口为首15秒留出启动余量。文件为真实 JPEG，保存采集起止、哈希、实际 SSH 启动完成时间和新增 Loon scriptRecords。缺少画面、间隔过大、末帧不足启动完成后14秒，均不能通过。一次失败停止后续采集，清理本轮 helper/隧道；不杀别人的进程。
+
+原生路径不伪造 `applicationState=0`。Agent 必须逐帧看图，在每个 trial 下写 `native-ui-review.json`：`source=visual_screen_review`、`manifest_sha256` 绑定 `capture.json`，`frames` 与原始列表一一同序，逐项包含 `file`、`sha256`、`state`。`state=target_app` 表示已看图确认目标界面；仅首2秒、目标出现之前允许 `launch_transition`。锁屏、其他 App、黑屏或未审核均失败。该文件只证明界面，不证明 Loon 脚本版本/广告命中；仍需外层 `review.json` 和运行版本证据。随后使用下方 `daily review` / `notify`，不能直接把 raw capture-summary 当成成功。
+
+下面的旧 Frida preflight/capture 入口仍被事故策略阻止；**不要运行它们或解除隔离来绕过原生前置检查**。review/notify/release-check 不导入 Frida，可以处理原生证据：
 
 ```powershell
 python -m maintenance.daily preflight
@@ -78,6 +96,6 @@ JD 默认合成样本为27项；可通过 `JD_BASIC_CONFIG_FIXTURE`、`JD_STARTU
 
 ## 故障和恢复
 
-运行使用原生文件锁；采集子进程最长29分钟，为通知与清理保留预算。超时后不能假设手机端已清理，次轮必须先确认上轮创建的 Frida PID 和配置恢复。
+运行使用原生文件锁。原生单次采集有90秒总超时、45秒看图等待上限和20秒画面窗口；SSH/构建有独立超时。旧 Frida 入口保留29分钟父进程上限，但不得运行。次轮先确认上轮 helper/隧道清理与配置恢复；不得启动/重试 Frida。
 不保存解锁密码；测试时电脑不休眠、SE2解锁联网。主机关机期间无法实时通知，恢复后摘要补报漏跑。
 广告两次复现才触发修复；一个候选至少完成同输入的原版/修改/回滚验证。超过两个候选或30分钟停止并通知，保留最后有效版本。
